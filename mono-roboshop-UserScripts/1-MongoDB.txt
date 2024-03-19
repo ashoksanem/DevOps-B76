@@ -1,0 +1,40 @@
+1------------------ MongoDB 10.76.4.4 1b  1-MongoDB-BackEnd ------------------------------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname mongodb.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+#sudo export mongodb_ip=$(hostname -i | awk '{print $1}')
+
+sudo cat > /etc/yum.repos.d/mongo.repo << EOF
+[mongodb-org-4.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.2/x86_64/
+gpgcheck=0
+enabled=1
+EOF
+
+sudo dnf install mongodb-org -y 
+
+sudo systemctl start mongod
+
+sudo systemctl enable mongod
+
+sudo sudo ex -s -c '%s/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g|x' /etc/mongod.conf     
+
+sudo systemctl restart mongod
+
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+mongodb_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh
+
+### https://askubuntu.com/questions/20414/find-and-replace-text-within-a-file-using-commands
+### https://stackoverflow.com/questions/72361923/replace-a-value-of-parameter-in-a-file

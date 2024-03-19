@@ -1,0 +1,56 @@
+10--------------------------Dispatch 10.76.6.11  1c 6-Dispatch-MiddleWare ---------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname dispatch.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+dispatch_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh
+
+sudo dnf install golang -y
+
+sudo useradd roboshop
+
+sudo mkdir /app
+
+sudo curl -L -o /tmp/dispatch.zip https://roboshop-builds.s3.amazonaws.com/dispatch.zip
+
+sudo unzip /tmp/dispatch.zip -d /app
+
+sudo cd /app 
+
+sudo go mod init dispatch
+
+sudo go get 
+
+sudo go build
+
+sudo cat > /etc/systemd/system/dispatch.service << EOF
+[Unit]
+Description = Dispatch Service
+[Service]
+User=roboshop
+Environment=AMQP_HOST=rabbitmq.learndevops.life
+Environment=AMQP_USER=roboshop
+Environment=AMQP_PASS=roboshop123
+ExecStart=/app/dispatch
+SyslogIdentifier=dispatch
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+
+sudo systemctl start dispatch 
+
+sudo systemctl enable dispatch
+

@@ -1,0 +1,67 @@
+5------------------ catalogue 10.76.6.6  1c  1-Catalogue-MiddleWare-------------------------------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname catalogue.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+#sudo export catalogue_ip=$(hostname -i | awk '{print $1}')
+
+sudo dnf module disable nodejs -y
+
+sudo dnf module enable nodejs:18 -y
+
+sudo dnf install nodejs -y
+
+sudo useradd roboshop
+
+sudo mkdir /app
+
+sudo curl -o /tmp/catalogue.zip https://roboshop-builds.s3.amazonaws.com/catalogue.zip
+
+sudo unzip /tmp/catalogue.zip  -d /app
+
+sudo npm install --prefix /app/
+
+sudo cat > /etc/systemd/system/catalogue.service << EOF
+[Unit]
+Description = Catalogue Service
+
+[Service]
+User=roboshop
+Environment=MONGO=true
+Environment=MONGO_URL="mongodb://mongodb.learndevops.life:27017/catalogue"
+ExecStart=/bin/node /app/server.js
+SyslogIdentifier=catalogue
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+
+sudo systemctl start catalogue
+
+sudo systemctl enable catalogue
+
+sudo cat > /etc/yum.repos.d/mongo.repo << EOF
+[mongodb-org-4.2]
+name=MongoDB Repository
+baseurl=https://repo.mongodb.org/yum/redhat/\$releasever/mongodb-org/4.2/x86_64/
+gpgcheck=0
+enabled=1
+EOF
+
+sudo dnf install mongodb-org-shell -y
+
+sudo mongo --host mongodb.learndevops.life </app/schema/catalogue.js
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+catalogue_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh

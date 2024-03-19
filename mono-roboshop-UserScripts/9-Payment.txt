@@ -1,0 +1,58 @@
+9--------------------------Payment 10.76.6.10  1c  5-Payment-MiddleWare ---------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname payment.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+payment_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh
+
+sudo dnf install python36 gcc python3-devel -y
+
+sudo useradd roboshop
+
+sudo mkdir /app
+
+sudo curl -L -o /tmp/payment.zip https://roboshop-builds.s3.amazonaws.com/payment.zip
+
+sudo unzip /tmp/payment.zip -d /app/
+
+sudo pip3.6 install -r /app/requirements.txt
+
+sudo cat > /etc/systemd/system/payment.service << EOF
+[Unit]
+Description=Payment Service
+
+[Service]
+User=root
+WorkingDirectory=/app
+Environment=CART_HOST=cart.learndevops.life
+Environment=CART_PORT=8080
+Environment=USER_HOST=user.learndevops.life
+Environment=USER_PORT=8080
+Environment=AMQP_HOST=rabbitmq.learndevops.life
+Environment=AMQP_USER=roboshop
+Environment=AMQP_PASS=roboshop123
+
+ExecStart=/usr/local/bin/uwsgi --ini payment.ini
+ExecStop=/bin/kill -9 $MAINPID
+SyslogIdentifier=payment
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+
+sudo systemctl start payment
+
+sudo systemctl enable payment
+

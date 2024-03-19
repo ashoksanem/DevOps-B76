@@ -1,0 +1,28 @@
+2----------------------------- redis  10.76.4.5 1b  2-Redis-BackEnd -----------------------------------------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname redis.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+dnf install https://rpms.remirepo.net/enterprise/remi-release-8.rpm -y
+
+dnf module enable redis:remi-6.2 -y
+
+dnf install redis -y
+
+echo "bind 0.0.0.0 -::1" >> /etc/redis.conf
+
+systemctl enable redis
+
+systemctl start redis
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+redis_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh

@@ -1,0 +1,57 @@
+8--------------------------shipping 10.76.6.9  1c  4-Shipping-MiddleWare ---------------
+
+#!/bin/bash
+sudo hostnamectl set-hostname shipping.learndevops.life
+
+sudo echo -e "10.76.2.20  roboshop  roboshop.learndevops.life \n10.76.6.6  catalogue  catalogue.learndevops.life\n10.76.4.4  mongodb  mongodb.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.5  redis  redis.learndevops.life \n10.76.6.8  cart  cart.learndevops.life\n10.76.6.7  user  user.learndevops.life\n10.76.6.10  payment  payment.learndevops.life" >> /etc/hosts
+
+sudo echo -e "10.76.4.6  mysql  mysql.learndevops.life \n10.76.6.9  shipping  shipping.learndevops.life\n10.76.4.7  rabbitmq  rabbitmq.learndevops.life\n10.76.6.11  dispatch  dispatch.learndevops.life" >> /etc/hosts
+
+dnf install maven -y
+
+sudo useradd roboshop
+
+sudo mkdir /app
+
+curl -L -o /tmp/shipping.zip https://roboshop-builds.s3.amazonaws.com/shipping.zip
+
+sudo unzip /tmp/shipping.zip  -d /app
+
+sudo mvn clean package -f /app/
+
+sudo mv /app/target/shipping-1.0.jar /app/target/shipping.jar
+
+sudo cat > /etc/systemd/system/shipping.service << EOF
+[Unit]
+Description=Shipping Service
+
+[Service]
+User=roboshop
+Environment=CART_ENDPOINT=cart.learndevops.life:8080
+Environment=DB_HOST=mysql.learndevops.life
+ExecStart=/bin/java -jar /app/target/shipping.jar
+SyslogIdentifier=shipping
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+sudo systemctl daemon-reload
+
+sudo systemctl start shipping
+
+sudo systemctl enable shipping
+
+dnf install mysql -y
+
+mysql -h mysql.learndevops.life -uroot -pRoboShop@1 < /app/schema/shipping.sql 
+
+systemctl restart shipping
+
+sudo cat > /etc/profile.d/roboshop_env.sh << EOF
+shipping_ip=$(hostname -i | awk '{print $1}')
+EOF
+
+sudo source /etc/profile.d/roboshop_env.sh
