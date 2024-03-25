@@ -1,4 +1,4 @@
-#!/bain/bash
+#!/bin/bash
 PERSON_1=Ramesh
 PERSON_2=Suresh
 echo "$PERSON_1: Hello $PERSON_2, GM"
