@@ -1,0 +1,51 @@
+---> Example inventory file <---
+
+10.76.2.10
+10.76.2.11
+
+[web]
+10.76.2.100
+
+[catalogue]
+10.76.2.20
+
+[cart]
+10.76.2.30
+
+[roboshop:children]
+web
+cart
+catalogue
+
+[roboshop:vars]
+course_name="AWS-DevOps"
+trainer_name="Shiva"
+duration="80 Days"
+
+--------------------------------------
+
+ansible -i <inventory_name>  <servers_group_name> --list-hosts
+
+ansible -i <inventory_name>  cart  --list-hosts
+
+ansible -i <inventory_name>  roboshop  --list-hosts
+
+ansible -i <inventory_name>  ungrouped  --list-hosts
+
+ansible -i <inventory_name>  all  --list-hosts
+
+--------------------------------------
+
+ansible-playbook  -i ans_inventory  -e  ansible_user=centos ansible_password=DevOps321  playbook.yaml
+ansible-playbook  -i ans_inventory  -e "course_name=AWS_DevOps" -e "trainer_name=Shiva"  -e "duration=80Days" debug-playbook.yaml  
+ansible-playbook  -i ans_inventory  debug-playbook.yaml --check
+ansible-playbook  -i ans_inventory  debug-playbook.yaml  --syntax-check
+
+ansible varible preference
+1. CMD line from arguments
+2. Task level varibles
+3. File level varibles
+4. Prompt level varibles
+5. play level varibles 
+6. Inventory level varibles
+7. Roles level varibles

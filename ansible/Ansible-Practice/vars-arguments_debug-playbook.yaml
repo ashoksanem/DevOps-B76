@@ -1,0 +1,9 @@
+-  name: Check Variables From Inventory
+   hosts: all 
+   become: true                 
+   #become_user: root
+    
+   tasks:
+     - name: Print & Check Variables from Inventory
+       ansible.builtin.debug:
+         msg: "Learn {{ course_name }} from {{ trainer_name }} for {{ duration }}"

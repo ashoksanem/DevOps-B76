@@ -1,0 +1,41 @@
+- name: checking data types
+  hosts: all
+  become: true
+  vars:
+    Name: "John" # Name is Key Value Type
+
+    Skills: # Skills are List Type
+      - Linux
+      - Ansible
+      - Git
+      - Docker
+      - AWS
+
+    Experience: # Experience is Map Type it has Key Value Pairs
+      Linux: 5
+      Ansible: 3
+      Git: 2
+      Docker: 2
+      AWS: 1
+      DevOps: 3
+
+    Trainer: true   # Trainer is Boolean Type        
+  
+  tasks:
+    - name: Print Name Which is Key Value Pair
+      ansible.builtin.debug:
+        msg: "name: {{ Name }}"
+    
+    - name: Print Skills Which is List Type
+      ansible.builtin.debug:
+        msg: "skills: {{ Skills }}"
+    
+    - name: Print Experience Which is Map Type
+      ansible.builtin.debug:
+        msg: "experience: {{ Experience }}"
+
+    - name: Print Trainer Which is Boolean Type
+      ansible.builtin.debug:
+        msg: "is he trainer: {{ Trainer }}"
+
+   

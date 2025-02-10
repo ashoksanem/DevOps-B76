@@ -1,0 +1,21 @@
+- name: Check Variables Prompt Module
+  hosts: all 
+  become: true                 
+  #become_user: root
+  vars_prompt:
+    - name: "course_name"
+      prompt: Please Enter Course Name
+      private: no
+     
+    - name: "trainer_name"
+      prompt: Please Enter Trainer Name
+      private: yes
+
+    - name: "duration"
+      prompt: Please Enter Duration
+      private: no        
+     
+  tasks:
+    - name: Print & Check Variables
+      ansible.builtin.debug:
+        msg: "Learn {{ course_name }} from {{ trainer_name }} for {{ duration }}"

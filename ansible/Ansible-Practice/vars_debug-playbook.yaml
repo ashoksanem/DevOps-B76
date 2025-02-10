@@ -1,0 +1,29 @@
+-  name: check Debug & Vars Module
+   hosts: all 
+   become: true                 
+   #become_user: root
+   vars:
+     course_name: DevOps
+     trainer_name: Self
+     duration: 110.hrs
+     
+   tasks:
+     - name: Task-1 Debug Module
+       ansible.builtin.debug:
+         msg: Testing Debug Module
+         
+     - name: Get uptime information
+       ansible.builtin.shell: /usr/bin/uptime
+       register: result
+       
+
+     - name: Print return information from the previous task
+       ansible.builtin.debug:
+         var: result
+         verbosity: 2
+
+     - name: Check Variables
+       vars:
+          course_name: "AWS DevOps"
+       ansible.builtin.debug:
+         msg: Hello I will {{ trainer_name }} learn {{ course_name }} for {{ duration }}

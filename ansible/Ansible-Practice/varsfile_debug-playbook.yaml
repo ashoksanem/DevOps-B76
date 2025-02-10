@@ -1,0 +1,11 @@
+-  name: Check Variables File
+   hosts: all 
+   become: true                 
+   #become_user: root
+   vars_files:
+     - variables.yaml
+     
+   tasks:
+     - name: Check Variables File
+       ansible.builtin.debug:
+         msg: Hello I will {{ trainer_name }} learn {{ course_name }} for {{ duration }}

@@ -1,0 +1,27 @@
+-  name: Install & Run Nginx Service
+   hosts: node1
+   become: true                 
+   #become_user: root
+   tasks:
+     - name: Install Nginx
+       ansible.builtin.package:
+         name: nginx
+         state: present
+     
+     
+     - name: Start Nginx Service
+       ansible.builtin.service: 
+         name: nginx
+         state: started
+
+     
+     - name: Set nginx_service variable
+       set_fact:
+         nginx_service: "running"
+
+
+     - name: Assert Nginx Service is Running
+       ansible.builtin.assert:
+         that:
+           - "nginx_service is defined"
+           - "nginx_service == 'running'"

@@ -1,0 +1,29 @@
+- name: Check Conditions
+  hosts: all
+  become: yes
+  tasks:
+    - name: Check if sysadmin user exists
+      ansible.builtin.command: id -u {{ item }}
+      loop:
+        - sysadmin
+        - developer
+        - tester
+      register: user
+      ignore_errors: true
+
+    - name: Print users status
+      ansible.builtin.debug:
+        msg: "user status is: {{ user }}"
+    
+    - name: Print user Exist Status Return Code
+      ansible.builtin.debug:
+        msg: "User Exist Status Return Code is: {{ item.item }}: {{ item.rc }}"
+      loop: "{{ user.results }}"
+           
+    - name: Add user sysadmin if not exists
+      ansible.builtin.user:
+        name: "{{ item.item }}"
+        state: present
+      when: item.rc != 0 #condition
+      loop: "{{ user.results }}"
+      
