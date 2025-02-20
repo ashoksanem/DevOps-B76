@@ -1,0 +1,10 @@
+[Unit]
+Description = Catalogue Service
+
+[Service]
+User=roboshop
+Environment=MONGO=true
+Environment=MONGO_URL="mongodb://10.76.200.14:27017/catalogue" 
+                        ##MONGODB-SERVER-IPADDRESS>:27017##
+ExecStart=/bin/node /app/server.js
+SyslogIdentifier=catalogue

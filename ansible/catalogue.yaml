@@ -1,0 +1,80 @@
+- name: Configure Catalogue
+  hosts: catalogue
+  become: yes
+  tasks:
+    - name: Disable old nodejs and enable nodejs.18 
+      ansible.builtin.shell: dnf module disable nodejs -y ; dnf module enable nodejs:18 -y
+
+    - name: Install nodejs.18
+      ansible.builtin.package:
+        name: nodejs
+        state: present
+
+    - name: Create Roboshop User
+      ansible.builtin.user:
+        name: roboshop
+
+    - name: Create App directory
+      ansible.builtin.file:
+       path: /app
+       state: directory   
+
+    - name: Download Catalogue Application
+      ansible.builtin.get_url:
+        url: https://roboshop-builds.s3.amazonaws.com/catalogue.zip
+        dest: /tmp  
+
+    - name: Extract Catalogue Application to /app Directory
+      ansible.builtin.unarchive:
+        src: /tmp/catalogue.zip
+        dest: /app
+        remote_src: yes
+
+    - name: Install NPM Dependencies
+      ansible.builtin.command: npm install
+      args:
+        chdir: /app
+    
+    - name: Copy Catalogue Service File
+      ansible.builtin.copy:
+        src: catalogue.service
+        dest: /etc/systemd/system/catalogue.service
+    
+    - name: deamon realod and start
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+
+    - name: Copy MongoDB Repo
+      ansible.builtin.copy:
+        src: mongodb.repo
+        dest: /etc/yum.repos.d/mongodb.repo
+
+    - name: Install mongodb client
+      ansible.builtin.package:
+        name: mmongodb-org-shell
+        state: present
+
+    ### /app/schema mongo --host <modoDB IP>  --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()' ###
+
+    - name: Get Categories Count
+      ansible.builtin.command:  mongo --host mongodb.daws76s.online --quiet --eval 'db = db.getSiblingDB("catalogue"); db.products.count()'
+      register: product_count
+
+
+  # - name: print the count
+  #   ansible.builtin.debug:
+  #     msg: "product count: {{product_count}}"
+    
+    - name: Print product_count
+      ansible.builtin.debug:
+        var: product_count.stdout
+
+    - name: Load Catalogue Schema 
+      ansible.builtin.command: mongo --host 10.76.200.14 < /app/schema/catalogue.js
+      when: product_count.stdout == "0" 
+
+    - name: Start, Enable Catalogue Service
+      ansible.builtin.service:
+        name: catalogue
+        state: restarted
+        enabled: yes
