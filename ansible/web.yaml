@@ -1,0 +1,46 @@
+- name: Configure Roboshop WebUI/Nginx
+  hosts: web
+  become: yes
+  tasks:
+    - name: Install Nginx
+      ansible.builtin.package:
+        name: nginx
+        state: present
+
+    - name: Remove Default HTML Directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: absent
+
+    - name: Create HTML Directory
+      ansible.builtin.file:
+        path: /usr/share/nginx/html
+        state: directory
+
+    - name: Download Web/Niginx Application
+      ansible.builtin.get_url:
+        url: https://roboshop-builds.s3.amazonaws.com/web.zip
+        dest: /tmp  
+
+    - name: Extract Web/Niginx Application to /usr/share/nginx/html Directory
+      ansible.builtin.unarchive:
+        src: /tmp/web.zip
+        dest: /usr/share/nginx/html
+        remote_src: yes
+
+    - name: Copy Roboshop/Nginx Configuration file
+      ansible.builtin.copy:
+        src: roboshop.conf
+        dest: /etc/nginx/default.d/roboshop.conf
+
+    - name: allow remote conncections
+      ansible.builtin.replace:
+        path: /etc/nginx/default.d/roboshop.conf
+        regexp: 'catalogue.roboshop.org'
+        replace: '10.76.100.253'
+
+    - name: start and enable nginx
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: yes
